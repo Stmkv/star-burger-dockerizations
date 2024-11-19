@@ -12,6 +12,63 @@
 
 Третий интерфейс — это админка. Преимущественно им пользуются программисты при разработке сайта. Также сюда заходит менеджер, чтобы обновить меню ресторанов Star Burger.
 
+## Как запустить prod верисю сайта
+
+На сервере в папку app
+
+```
+git clone https://github.com/Stmkv/star-burger-dockerizations.git .
+```
+
+Создать `.env` файл и положить его в корневой каталог и каталог `/backend`:
+
+```
+- DEBUG — дебаг-режим. Поставьте `False`.
+- SECRET_KEY — секретный ключ проекта. Он отвечает за шифрование на сайте. Например, им зашифрованы все пароли на вашем сайте.
+- ALLOWED_HOSTS — [см. документацию Django](https://docs.djangoproject.com/en/3.1/ref/settings/#allowed-hosts)
+- ROLLBAR_TOKEN=<Token Rollbar>
+- ROLLBAR_ENVIRONMENT=<Environment rollbar>
+- POSTGRES_USER=test
+- POSTGRES_PASSWORD=test
+- POSTGRES_DB=test
+- POSTGRES_HOST=db
+
+```
+
+После чего из корневого каталога выполнить команду и дождаться пока все контейнеры соберуться
+
+```
+docker-compose up -d
+```
+
+ Для создания суперполдьзователя
+
+```
+docker-compose exec app_web python manage.py createsuperuser
+```
+
+Также необходимо установить `nginx` и создать конфиг в папке `/etc/nginx/sites-enabled`:
+
+```
+server {
+    server_name <ваш домен или ip>;
+    location / {
+        include /etc/nginx/proxy_params;
+        proxy_pass http://127.0.0.1:8080/;
+    }
+
+    location /media/ {
+        alias /app/media/; # Путь к media
+    }
+
+    location /static/ {
+        alias /app/static/; # Путь к static файлам
+    }
+}
+```
+
+Для быстрого обновления репозитория используйте скрипт `deploy_script.sh`
+
 ## Как запустить dev-версию сайта
 
 Для запуска сайта нужно запустить **одновременно** бэкенд и фронтенд, в двух терминалах.
@@ -164,7 +221,7 @@ Parcel будет следить за файлами в каталоге `bundle
 Для сохранения данных из прежней базы данных:
 
 ```
-python3 manage.py dumpdata --exclude contenttypes > starburger_db.json  
+python3 manage.py dumpdata --exclude contenttypes > starburger_db.json
 ```
 
 ```sudo
@@ -202,8 +259,8 @@ python3 manage.py migrate
 python3 manage.py loaddata starburger_db.json
 ```
 
-
 Для быстрого развертывания на сервере можжно использовать скрипт `deploy_star_burger.sh`
+
 ## Цели проекта
 
 Код написан в учебных целях — это урок в курсе по Python и веб-разработке на сайте [Devman](https://dvmn.org). За основу был взят код проекта [FoodCart](https://github.com/Saibharath79/FoodCart).
